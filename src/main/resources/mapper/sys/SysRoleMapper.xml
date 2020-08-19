@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.cy.pj.sys.dao.SysRoleDao">
+ <!--  resultMap="" 一般用于mybatis查询中的高级映射(自定义映射) -->
+ <resultMap type="com.cy.pj.sys.entity.SysRoleBO" id="SysRoleBO">
+ <!-- 使用collection再次查询  应用有1对多的映射。
+  property="menuIds":要查询的信息 column="id"：把上一次查询的结果 id
+ 作为#{id} 查询 select="。。。"中的条件去查询  ofType="Integer"：表示的时property中存放的类型是什么类型-->
+ <!--<id property="id" column="id"/><id/>：是主键 。<result property="name" column="name"/>
+  表示把查询到的id保存到这个 type="com.cy.pj.sys.entity.SysRoleBO"
+ 	 类中，作为查询的条件要有这个标签(因为作为查询条件id是不会存入到type=""这个类中。)
+ 	 ，如果其他要存如着type类中的名称一样，可以简写，如下面查到的是name 
+ 	  在type=""的类中也是name 那么就可以简写。 -->
+ 	  	<id property="id" column="id"/>
+ 	<collection property="menuIds" 
+ 				ofType="Integer"
+ 	   			column="id"
+ 	   			select="com.cy.pj.sys.dao.SysRoleMenuDao.findMenuIdsByRoleId"></collection>
+ 	<!-- 如果查询的条件是在本文件，那么就可以不要前面的类路径 -->
+ </resultMap>
+ <select id="findObjectById" resultMap="SysRoleBO">
+ 	select id,name,note from sys_roles where id=#{id}
+ </select>
+ 
+ 
+ 
+ 
+ <!-- 使用PageHelper做分页查询-->
+ 	<select id="findPageObjects" resultType="com.cy.pj.sys.entity.SysRole">
+ 		select id,name,note,createdTime,createdUser,modifiedTime,modifiedUser from sys_roles
+ 		<where>
+ 			<choose>
+ 				<when test="name!=null and name!=''">
+ 				    name like concat("%",#{name},"%")
+ 				</when>
+ 			</choose>
+ 		</where>
+ 			order by createdTime desc
+ 	</select>
+ <!--保存角色信息 parameterType="com.cy.pj.sys.entity.SysRole" 要添加的类型  
+ useGeneratedKeys=''true'表示要使用insert的主键值 keyProperty="id" id对象的主键值存入到上面的对象中-->
+ 	<insert id="insertObject" parameterType="com.cy.pj.sys.entity.SysRole"
+ 				useGeneratedKeys="true"
+ 				keyProperty="id">
+ 		insert into sys_roles
+ 		(id,name,note,createdTime,createdUser,modifiedTime,modifiedUser)
+ 		values
+ 		(null,#{name},#{note},#{createdTime},#{createdUser},#{modifiedTime},#{modifiedUser})
+ 	</insert>
+ <!--做修改操作 -->
+ <update id="updateObject">
+ 	update sys_roles set 
+ 	 name=#{name},
+ 	 note=#{note},
+ 	 modifiedTime=now(),
+ 	 modifiedUser=#{modifiedUser}
+ 	 where id=#{id}
+ </update>
+ 
+ 
+ 
+ <!-- 	<select id="getRowCount" resultType="int">
+ 		select count(*) from sys_roles
+ 		<where>
+ 			<choose>
+ 				<when test="name!=null and name!=''">
+ 				    name like concat("%",#{name},"%")
+ 				</when>
+ 			</choose>
+ 		</where>
+ 	</select> -->
+ 	<!-- <select id="findPageObjects" resultType="com.cy.pj.sys.entity.SysRole">
+ 		select id,name,note,createdTime,createdUser,modifiedTime,modifiedUser from sys_roles
+ 		<where>
+ 			<choose>
+ 				<when test="name!=null and name!=''">
+ 				    name like concat("%",#{name},"%")
+ 				</when>
+ 			</choose>
+ 		</where>
+ 			order by createdTime desc
+ 			limit #{startIndex},#{pageSize}
+ 	</select>
+  -->
+ 	
+ </mapper>

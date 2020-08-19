@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="com.cy.pj.sys.dao.SysUserDao">
+ <!-- 使用高级映射做查询 这个是多对一的查询 多个用户对应的一个部门-->
+ 	<resultMap type="com.cy.pj.sys.entity.SysUserDept" id="SysUserDept">
+ 		<!-- association多对一(mant2one)或者 one2one 查询的映射  通过查询下面表查询的deptId 使用这个结果去寻找sysDept-->
+ 		<id property="id" column="id"/>
+ 		<association property="sysDept"
+ 		  			column="deptId"
+ 		  			select="com.cy.pj.sys.dao.SysDeptDao.findById"
+ 		  			></association>
+ 		  			<!-- com.cy.pj.sys.dao.SysDeptDao.findById是一个映射的关系，在SysDeptDept接口中可以没有 -->
+ 	</resultMap>
+
+ 	<select id="findPageObjects" resultMap="SysUserDept">
+ 		select * from sys_users
+ 		<where>
+ 			<choose>
+ 				<when test="username!=null and username!=''">
+ 				    username like concat("%",#{username},"%")
+ 				</when>
+ 			</choose>
+ 		</where>
+ 			order by createdTime desc
+ 	</select>
+ <insert id="insertObject" parameterType="com.cy.pj.sys.entity.SysUser"
+ 						   useGeneratedKeys="true"
+ 				           keyProperty="id">
+ 			insert into sys_users
+ 			(username,password,deptId,email,mobile,salt,valid,
+     		createdTime,modifiedTime,createdUser,modifiedUser)
+      		values
+   			(#{username},#{password},#{deptId},#{email},#{mobile},#{salt},#{valid},
+     		now(),now(),#{createdUser},#{modifiedUser})
+
+ 	</insert>
+<!--做修改的查询 -->
+<select id="findObjectById" resultMap="SysUserDept">
+	select * from sys_users 
+	where id=#{id}
+
+</select>
+<update id="updateObject">
+	update sys_users set
+	username=#{username},
+	deptId=#{deptId},
+	email=#{email},
+	mobile=#{mobile},
+	modifiedTime=now()
+	where id=#{id}
+
+</update>
+
+
+ </mapper>

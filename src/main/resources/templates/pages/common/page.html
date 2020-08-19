@@ -1,0 +1,75 @@
+<div  th:fragment="pageFragement">
+<ul class="pagination pagination-sm no-margin pull-right">
+    <li><a class="first">首页</a></li>
+	<li><a class="pre">上一页</a></li>
+	<li><a class="next">下一页</a></li>
+	<li><a class="last">尾页</a></li>
+	<li><a class="rowCount">总记录数(0)</a></li>
+	<li><a class="pageCount">总页数(0)</a></li>
+	<li><a class="pageCurrent">当前页(1)</a></li>
+</ul>
+<script type="text/javascript">
+	function doSetPagination(pageObject){
+		//$(".rowCount").html("总记录数("+pageObject.rowCount+")");
+		$(".rowCount").html(`总记录数(${pageObject.rowCount})`);//使用“ ` ”这个符号就可以不用写拼接符号+
+		$(".pageCount").html("总页数("+pageObject.pageCount+")");//需要注意的是，使用这个符号之后要获取
+		$(".pageCurrent").html("当前页("+pageObject.pageCurrent+")");       //的元素需要使用${}包起来，这是语法。
+		//把数据存入到id为pageId
+		$("#pageId").data("pageCurrent",pageObject.pageCurrent);
+		$("#pageId").data("pageCount",pageObject.pageCount);
+	}	
+	$(function(){
+		//这个页面加载之后执行，最终我们的这页会放在id为pageId的div里面，我们先取到这个对象，
+		//之后为这里面的元素注册事件，注册点击事件。on()函数可以同时向多个元素上面注册事件，
+		//on("click",".first,.pre,.next,.last",) :click表示注册点击事件，.first,.pre,.next,.last"：
+		//表示同时为这些元素绑定点击事件，
+		$("#pageId").on("click",".first,.pre,.next,.last",doClick);
+		//这句话的意思是，当点击pageId对象内部的子元素.first,.pre,.next,.last 执行函数click
+	})
+	function doClick(){
+		//1.先确定被点击的是哪个对象？
+		//$(this) ：获取被点击的对象
+		var pageCurrent=$("#pageId").data("pageCurrent");//总页数
+		var pageCount=$("#pageId").data("pageCount");//当前页
+		//prop(属性名[,属性值])获取dom对象的属性值，或者给属性赋值。
+		var click=$(this).prop("class");
+		//2.修改当前页码值
+		//1)点击首页，页面值修改为当前页
+		if(click=="first"){
+			pageCurrent=1;
+			
+		}
+		//2)点击尾页，页面值为pageCurrent
+		else if(click=="last"){
+			pageCurrent=pageCount;
+		}
+		//3)点击上一页，如果不是第一页，则pageCurrent-1；
+		else if(click=="pre"&&pageCurrent>1){
+			pageCurrent--;
+		}
+		//4)点击下一页，如果不是最后一页，pageCurrent+1
+		else if(click=="next"&&pageCurrent<pageCount){
+			pageCurrent++;
+		}
+		//5)如果是第一页，点击上一页就return 如果是最后一页，点击就return
+		else {
+			return;
+		}
+		//重新存储新的页码值
+		
+		$("#pageId").data("pageCurrent",pageCurrent);
+		//3.根据页面值刷新页面
+		doGetObjects();
+		
+		
+	}
+	
+</script>
+</div>
+
+
+
+
+
+
+

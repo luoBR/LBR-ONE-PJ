@@ -1,0 +1,213 @@
+<div class="row">
+	<div class="col-xs-12">
+		<div class="box">
+			<div class="box-header">
+				<h3 class="box-title">日志管理</h3>
+				<div class="box-tools">
+					<div class="input-group input-group-sm" style="width: 350px;">
+						<input type="text" name="table_search" id="searchNameId"
+							class="form-control pull-right" placeholder="用户名">
+
+						<div class="input-group-btn">
+							<button type="button" class="btn btn-default btn-search">
+                                <i class="fa fa-search"></i>
+							</button>
+							<button type="button" class="btn btn-default btn-delete">删除</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /.box-header -->
+			<div class="box-body table-responsive no-padding">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+						    <th><input type="checkbox" id="checkAll">全选</th>
+							<th>用户名</th>
+							<th>操作</th>
+							<th>请求方法</th>
+							<th>请求参数</th>
+							<th>IP</th>
+							<th>执行时长</th>
+						</tr>
+					</thead>
+					<tbody id="tbodyId" type="nihao!">
+					    <tr>
+					       <td colspan="7">数据正在加载中...</td>
+					    </tr>
+					</tbody>
+				</table>
+			</div>
+			<div id="pageId" class="box-footer clearfix" dm="100" 
+			th:insert="common/page.html :: pageFragement">
+			  <!--th:insert="common/page.html :: copy"使用thymeleaf的方式 引入其html资源 
+			            这里表式：在 -->
+			</div>
+			<!-- /.box-body -->
+		</div>
+		<!-- /.box -->
+	</div>
+</div>
+<script type="text/javascript">
+   //JS 问题如何解决? console.log(),debugger,排除法
+	/* $(function(){
+		$("#pageId").load("doPageUI");
+	}) */
+ 	$(function(){
+ 		doGetObjects();//获取响应数据
+ 		//使用搜索框查询
+ 		$(".input-group-btn").on("click",".btn-search",doGetObjects2);
+ 		//根据id删除
+ 		$(".input-group-btn").on("click",".btn-delete",doDeleteByIds);
+ 		//全选
+ 		$("#checkAll").on("click",doCheckAll);
+ 		//$("#checkAll").change(doCheckAll)也可以
+ 		//$("").click(doCheckAll)也可以
+ 		
+ 		//为单个checkbox做一个反选，注册一个change状态，状态发现改变执行函数 
+ 		$("#tbodyId").on("change","input:checkbox",doChangeTheadCheckbox);
+ 		
+ 		/*1:$("#checkAll input:checkbox").change(doCheckAll) 与的区别2:$("#tbodyId").on("change","input:checkbox",) 
+ 		使用1时对于change前面的对象必须在加载之前存在才能成功，如果不是页面加载之前的就会失败
+ 		使用2时对于on前面的对象也是必须存在的，但是它的后面的"input:checkbox"对象时可以在加载之后存在的对象
+ 		*/
+ 	})
+ 	//反选
+ 	function doChangeTheadCheckbox(){
+	   var flag=true;
+	   $("#tbodyId input:checkbox")
+	   .each(function(){
+		   flag=flag && $(this).prop("checked")
+	   })
+	   $("#checkAll").prop("checked",flag);
+   }
+ 	
+ 	//全选
+ 	function doCheckAll(){
+	   //获取全选框的状态
+	   var state=$("#checkAll").prop("checked");
+	   //把全选框的状态设置为全部框的状态。
+	   $("#tbodyId input:checkbox").prop("checked",state);
+	   
+   }
+ 	
+ 	//选中选框删除id，先定义一个数组，把选中的数据放在里面
+ 	function doDeleteByIds(){
+ 		//1.定义数组
+	   var ids=new Array();
+ 		//2.迭代所有选中的checkbox对象，并获取到value值:id 然后存储到内存中。
+	   $("#tbodyId input:checkbox:checked").each(function(){
+		  ids.push($(this).val()); 
+	   });
+ 		//校验数据，如果没有选中的就没必要执行了。
+	   if(ids.length==0){alert("请选择"); return;}
+	   //这里表示，如果是:if(confirm(确定删除吗?))表示如果选择的是true那么继续执行if里面的语句
+	   //如果选择的是false那么不执行。在它前面加一个! 那么逻辑就会倒转，是false才会执行里面的语句 return。
+	   if(!confirm("确定删除吗？"))return;
+	   //不能直接把数组传入[数组],这样的形式在服务器端不认识，所以需要转为字符串 
+	   let params={"ids":ids.toString()};//[1,2,3]-->1,2,3
+	   let url="log/doDeleteIds";
+	   $.post(url,params,function(result){
+		   console.log(result);
+		   doAfterDelete();//删除之后的页面显示
+	   })
+	   
+   }
+ 	function doAfterDelete(){
+ 		
+ 		//在最后一页做优化，在最后一页的时候如果删除了全部记录，不会自动调转到上一页，
+ 		//用户体验不好。所以可以这样做:在如果当前页时最后一个，并且选中了全选框，我们可以
+ 		//使用pageCurrent-- 然后查询上一页记录。
+ 		var checkAll=$("#checkAll").prop("checked");
+ 		var pageCurrent=$("#pageId").data("pageCurrent");//在加载页面记录的时候存入了
+ 		var pageCount=$("#pageId").data("pageCount");
+ 		if(checkAll&&pageCurrent==pageCount&&pageCurrent>1){
+ 			pageCurrent--;
+ 			$("#pageId").data("pageCurrent",pageCurrent);
+ 		}
+ 		doGetObjects();
+ 		
+ 	}
+ 	function doGetObjects2(){ //使用搜索框查询
+	   //在查询的时候，从第一页开始显示数据
+ 		var pageCurrent = $("#pageId").data("pageCurrent",1);
+ 		doGetObjects();
+	  	
+   }
+ 	//查询数据
+	function doGetObjects(){
+		//初始化全选框状态
+	$("#checkAll").prop("checked",false);	
+	 var pageCurrent = $("#pageId").data("pageCurrent");
+	   //1.地址 参数 
+	   const url="/log/doFindPageObjects";
+	   if(!pageCurrent)pageCurrent=1;
+	   let uname=$("#searchNameId").val();
+	  /*  let params="pageCurrent="+pageCurrent;
+	   if(uname)params=params+"&username="+uname; */
+	   let params={"pageCurrent":pageCurrent};//以json格式对象呈现，提交的时候会自动转为使用&拼接的字符串
+	   if(uname)params.username=uname; //如果uname有值，就会在params中拼接json格式的对象 {username:uname}
+	  
+	   //doHandleQueryResult是一个回调函数，执行成功之后执行
+	   $.getJSON(url,params,doHandleQueryResult)
+		 	/* .fail(function(){ 如果查询失败，就执行这个函数
+			   $("#tbodyId).html("select error")
+		   })  */
+		   //拿到数据，之后调用方法添加到页面上
+	  
+   }
+	function doHandleQueryResult(result){
+		//console.log("result",result);
+		//判断是否是正常数据，如果是正常数据，显示到页面上
+		if(result.state==1){
+			//1.把日志信息更新到页面上
+			doSetTableBodyRows(result.data.records);
+			//2.把分页信息写到页面上
+			doSetPagination(result.data);
+			
+		}else{
+			//alert(result.message);
+			$("#tbodyId").html(`<tr><td colspan="7">${result.message}</td></tr>`)	
+			
+		}
+	}
+	//向tbody里面插入数据
+	function doSetTableBodyRows(list){
+		//1.清空表中数据
+		//2.遍历拿到数据
+		//3.调用方法插入到表中
+		var tBody=$("#tbodyId");
+		 tBody.empty();
+		// for(var i=0;i<list.length;i++){
+			//使用for循环的优点，1.可读性差 2.效率高
+			//var:全局变量 let:局部变量 const:定义一个常量，值不可改变
+			//缺点:代码量大，使用var定义的变量不严谨，不想是java中的，js只要在前面使用var定义了一个变量
+			//那么这个变量相当于是一个全局变量。可以使用let定义for里面的变量，相当与局部变量，出了for就不能使用。
+			//使用关键字const定义一个量那么这个量就是常量。
+			
+			list.forEach(item=>tBody.append(doCreateRows(item)));
+			//  “=>” javascript的一种表达式的写法，左边是数据中的一个元素的类容，右边是对元素的操作。
+			// 这种写法，效率给for循环的效率差不多，而且代码少，但是在第一次读的话可读性不高。
+			
+			//  使用强for循环：优点，代码量少。
+			 //   缺点:可读性差，效率不高，定义的变量不严谨(可以使用let替换var解决不严谨问题)
+		/*  for(let i=0;i<list.length;i++){
+			tbody.append(doCreateRows(list[i]));
+		 }  */
+	}
+	function doCreateRows(rows){
+		return `<tr>
+			<td><input type="checkbox" id=${rows.id} value=${rows.id}></td>
+			<td>${rows.username}</td>
+			<td>${rows.operation}</td>
+			<td>${rows.method}</td>
+			<td>${rows.params}</td>
+			<td>${rows.ip}</td>
+			<td>${rows.time}</td></tr> `
+	}
+</script>
+
+
+
+
+
