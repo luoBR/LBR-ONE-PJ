@@ -262,7 +262,7 @@ desired effect
           </a>
           <ul class="treeview-menu" >
             <li th:each="c:${m.childs}">
-            <a id="load-dept-id">[[${c.name}]]</a>
+            <a th:onclick="javascript:doLoadUI([[${c.url}]])">[[${c.name}]]</a>
             </li>
             
           </ul>
@@ -407,7 +407,7 @@ desired effect
 <!-- AdminLTE App -->
 <script src="dist/js/adminlte.min.js"></script>
 <script type="text/javascript">
-	$(function(){
+/* 	$(function(){
 		doLoadUI("load-log-id","log/log_list");//日志管理 
 		doLoadUI("load-menu-id","menu/menu_list");//菜单管理
 		doLoadUI("load-role-id","role/role_list");//角色管理
@@ -415,14 +415,17 @@ desired effect
 		doLoadUI("load-dept-id","dept/dept_list");//部门管理
 		doLoadUI("load-pwd-id","user/pwd_edit");//修改密码
 		
-	})
+	}) 
 	function doLoadUI(id,url){
-		$("#"+id).click(function(){
+		//$("#"+id).click(function(){
     	//基于jquery中的load函数向服务端发起ajax异步请求，并将响应的结果呈现在#mainContentId对应的对象位置
     	//$("#mainContentId").removeData(); 页面加载移除data的绑定的数据。
     	$("#mainContentId").load(url);
-    })
-	}
+  //  })
+	*/
+	function doLoadUI(url){
+			$("#mainContentId").load(url);
+		}
 </script>
 </body>
 </html>
